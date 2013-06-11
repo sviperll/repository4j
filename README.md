@@ -1,5 +1,5 @@
-Java code-driven ORM
-====================
+Code-driven (no-annotations) ORM for Java
+=========================================
 
 Allows you to write simple Repository-files for existing Java classes.
 
@@ -113,7 +113,7 @@ You can create Repository class to access persistant data and use it like shown 
     Connection connection = DriverManager.getConnection("jdbc:...");
     RepositorySupport repositorySupport = new RepositorySupport(connection);
     RepositoryFactory repositoryFactory = new RepositoryFactory(repositorySupport);
-    UserRepository repository = new UserRepository(repositoryFactory);
+    UserRepository repository = UserRepository.createInstance(repositoryFactory);
 
     User guestUser = ...
     UserKey currentUserKey = ...
