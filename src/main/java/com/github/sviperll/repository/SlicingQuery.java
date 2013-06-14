@@ -1,6 +1,6 @@
 package com.github.sviperll.repository;
 
-public interface RepositorySlicing<T> {
+public interface SlicingQuery<T> {
     public boolean isOrdered();
 
     public boolean isDescending();
@@ -11,11 +11,11 @@ public interface RepositorySlicing<T> {
 
     public boolean hasConditions();
 
-    public RepositorySlicingCondition<T> condition();
+    public SlicingQueryCondition<T> condition();
 
-    public RepositorySlicingResult result();
+    public SlicingQueryPostProcessing postProcessing();
 
-    public static interface RepositorySlicingCondition<T> {
+    public static interface SlicingQueryCondition<T> {
         public boolean isLess();
 
         public boolean isGreater();
@@ -23,7 +23,7 @@ public interface RepositorySlicing<T> {
         public T value();
     }
 
-    public interface RepositorySlicingResult {
-        public boolean needToBeReveresed();
+    public interface SlicingQueryPostProcessing {
+        public boolean needsToBeReveresed();
     }
 }

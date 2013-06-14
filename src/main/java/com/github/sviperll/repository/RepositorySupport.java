@@ -96,11 +96,11 @@ public class RepositorySupport {
         }
     }
 
-    public <V, O> List<V> entryList(ReadableRepositoryConfiguration<V, O> configuration, RepositorySlicing<O> slicing) throws SQLException {
+    public <V, O> List<V> entryList(ReadableRepositoryConfiguration<V, O> configuration, SlicingQuery<O> slicing) throws SQLException {
         return entryList(new VoidReadableRepositoryDirectoryConfiguration<V, O>(configuration), null, slicing);
     }
 
-    public <K, V, O> List<V> entryList(ReadableRepositoryDirectoryConfiguration<K, V, O> configuration, K key, RepositorySlicing<O> slicing) throws SQLException {
+    public <K, V, O> List<V> entryList(ReadableRepositoryDirectoryConfiguration<K, V, O> configuration, K key, SlicingQuery<O> slicing) throws SQLException {
         List<? extends AtomicStorableClassComponent<O, ?>> orderingElements = configuration.getOrderingDefinition().getAtomicComponents();
         List<? extends AtomicStorableClassComponent<K, ?>> keyElements = configuration.getKeyDefinition().getAtomicComponents();
         SQLBuilder sqlBuilder = new SQLBuilder();
@@ -171,7 +171,7 @@ public class RepositorySupport {
                         V entry = configuration.getEntryDefinition().createInstance(resultSet);
                         result.add(entry);
                     }
-                    if (slicing.result().needToBeReveresed())
+                    if (slicing.postProcessing().needsToBeReveresed())
                         Collections.reverse(result);
                     return result;
                 } finally {

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
-import com.github.sviperll.repository.RepositorySlicing.RepositorySlicingCondition;
+import com.github.sviperll.repository.SlicingQuery.SlicingQueryCondition;
 
 class SQLBuilder implements Appendable, CharSequence {
     private final StringBuilder stringBuilder = new StringBuilder();
@@ -44,7 +44,7 @@ class SQLBuilder implements Appendable, CharSequence {
         return this;
     }
 
-    public <T> SQLBuilder appendConditionForColumn(RepositorySlicingCondition<T> condition, AtomicStorableClassComponent<T, ?> element) {
+    public <T> SQLBuilder appendConditionForColumn(SlicingQueryCondition<T> condition, AtomicStorableClassComponent<T, ?> element) {
         String columnName = element.getColumn().getColumnName();
         stringBuilder.append(columnName);
         if (condition.isLess()) {

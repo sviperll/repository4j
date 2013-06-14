@@ -91,7 +91,7 @@ public class RepositoryFactory {
         return new ReadableRepository<E, O>() {
 
             @Override
-            public List<E> entryList(RepositorySlicing<O> slicing) throws SQLException {
+            public List<E> entryList(SlicingQuery<O> slicing) throws SQLException {
                 return support.entryList(configuration, slicing);
             }
         };
@@ -108,7 +108,7 @@ public class RepositoryFactory {
                 return new ReadableRepository<E, O>() {
 
                     @Override
-                    public List<E> entryList(RepositorySlicing<O> slicing)
+                    public List<E> entryList(SlicingQuery<O> slicing)
                             throws SQLException {
                         return support.entryList(configuration, key, slicing);
                     }

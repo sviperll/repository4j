@@ -13,6 +13,6 @@ import java.util.List;
  */
 public interface ReadableRepository<E, O> {
 
-    List<E> entryList(RepositorySlicing<O> slicing) throws SQLException;
+    List<E> entryList(SlicingQuery<O> slicing) throws SQLException;
 
 }
