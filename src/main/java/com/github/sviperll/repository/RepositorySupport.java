@@ -312,6 +312,10 @@ public class RepositorySupport implements SQLTransactionManager {
         connection.rollbackTransactionIfNotCommited();
     }
 
+    public SQLConnection connection() {
+        return connection;
+    }
+
     private static class StatementSetter {
         private final PreparedStatement statement;
         private int index;
