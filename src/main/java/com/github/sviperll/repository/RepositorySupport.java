@@ -222,7 +222,27 @@ public class RepositorySupport implements SQLTransactionManager {
         List<? extends AtomicStorableClassComponent<V, ?>> valueElements = configuration.getValueDefinition().getAtomicComponents();
         for (AtomicStorableClassComponent<V, ?> element: valueElements) {
             if (!isElementsEquals(element, attributes.oldValue(), attributes.newValue())) {
-                assignments.add(element.getColumn().getColumnName() + " = ?");
+                Object oldElementValueObject = element.getComponent(attributes.oldValue());
+                if (oldElementValueObject instanceof Integer) {
+                    int oldInt = (Integer)oldElementValueObject;
+                    int newInt = (Integer)element.getComponent(attributes.newValue());
+                    int delta = newInt - oldInt;
+                    String name = element.getColumn().getColumnName();
+                    if (delta >= 0)
+                        assignments.add(name + " = " + name + " + " + delta);
+                    else
+                        assignments.add(name + " = " + name + " - " + (-delta));
+                } else if (oldElementValueObject instanceof Long) {
+                    long oldInt = (Long)oldElementValueObject;
+                    long newInt = (Long)element.getComponent(attributes.newValue());
+                    long delta = newInt - oldInt;
+                    String name = element.getColumn().getColumnName();
+                    if (delta >= 0)
+                        assignments.add(name + " = " + name + " + " + delta);
+                    else
+                        assignments.add(name + " = " + name + " - " + (-delta));
+                } else
+                    assignments.add(element.getColumn().getColumnName() + " = ?");
             }
         }
         if (assignments.isEmpty()) {
@@ -245,7 +265,11 @@ public class RepositorySupport implements SQLTransactionManager {
                 StatementSetter statementSetter = new StatementSetter(statement);
                 for (AtomicStorableClassComponent<V, ?> element: valueElements) {
                     if (!isElementsEquals(element, attributes.oldValue(), attributes.newValue())) {
-                        statementSetter.setElement(element, attributes.newValue());
+                        Object oldElementValueObject = element.getComponent(attributes.oldValue());
+                        if (!(oldElementValueObject instanceof Integer)
+                            && !(oldElementValueObject instanceof Long)) {
+                            statementSetter.setElement(element, attributes.newValue());
+                        }
                     }
                 }
                 for (AtomicStorableClassComponent<K, ?> element: keyElements) {
