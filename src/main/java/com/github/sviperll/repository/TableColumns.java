@@ -13,28 +13,35 @@ import com.github.sviperll.repository.TableColumn.PreparedStatementParameterSett
 import com.github.sviperll.Isomorphism;
 
 public class TableColumns {
-    public static TableColumn<Integer> integer(String columnName) {
-        return new IntegerColumn(columnName);
+    public static <T> ConfigurableTableColumn<T> configure(TableColumn<T> column) {
+        if (column instanceof ConfigurableTableColumn)
+            return (ConfigurableTableColumn<T>)column;
+        else
+            return new ConfigurableTableColumn<T>(column);
     }
 
-    public static TableColumn<String> string(String columnName) {
-        return new StringColumn(columnName);
+    public static ConfigurableTableColumn<Integer> integer(String columnName) {
+        return new ConfigurableTableColumn<Integer>(new IntegerColumn(columnName));
     }
 
-    public static TableColumn<UnixTime> unixTime(String columnName) {
-        return new UnixTimeColumn(columnName);
+    public static ConfigurableTableColumn<String> string(String columnName) {
+        return new ConfigurableTableColumn<String>(new StringColumn(columnName));
     }
 
-    public static <T, U> TableColumn<T> isomorphic(TableColumn<U> columnDefinition, Isomorphism<T, U> structure) {
-        return new IsomorphicColumn<T, U>(columnDefinition, structure);
+    public static ConfigurableTableColumn<UnixTime> unixTime(String columnName) {
+        return new ConfigurableTableColumn<UnixTime>(new UnixTimeColumn(columnName));
     }
 
-    public static <T> TableColumn<T> retrievedByIndex(TableColumn<T> columnDefinition, int index) {
-        return new RetrievedByIndexColumn<T>(columnDefinition, index);
+    public static <T, U> ConfigurableTableColumn<T> isomorphic(TableColumn<U> columnDefinition, Isomorphism<T, U> structure) {
+        return new ConfigurableTableColumn<T>(new IsomorphicColumn<T, U>(columnDefinition, structure));
     }
 
-    public static TableColumn<Boolean> booleanColumn(final String columnName) {
-        return new BooleanColumn(columnName);
+    public static <T> ConfigurableTableColumn<T> retrievedByIndex(TableColumn<T> columnDefinition, int index) {
+        return new ConfigurableTableColumn<T>(new RetrievedByIndexColumn<T>(columnDefinition, index));
+    }
+
+    public static ConfigurableTableColumn<Boolean> booleanColumn(final String columnName) {
+        return new ConfigurableTableColumn<Boolean>(new BooleanColumn(columnName));
     }
 
     private TableColumns() {
