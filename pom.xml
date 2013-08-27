@@ -3,7 +3,7 @@
     <groupId>com.github.sviperll</groupId>
     <artifactId>sviperll-repository</artifactId>
     <packaging>jar</packaging>
-    <version>0.6.2</version>
+    <version>0.6.3-SNAPSHOT</version>
     <name>sviperll-repository</name>
     <url>http://maven.apache.org</url>
     <scm>
