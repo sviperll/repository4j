@@ -27,9 +27,11 @@
 package com.github.sviperll.repository;
 
 /**
- *
- * @author vir
+ * @param <T> tuple type
+ * @param <U> column value data-type
  */
-public interface ReadableRepositoryDirectoryConfiguration<K, V, O> extends ReadableRepositoryConfiguration<V, O>, RepositoryIndex<K> {
+public interface AtomicStorableComponent<T, U> {
+    ColumnStorableTypeBuilderDefinition<U> getColumn();
 
+    U getComponent(T compound);
 }

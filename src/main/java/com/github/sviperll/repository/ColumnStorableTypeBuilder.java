@@ -1,53 +1,153 @@
 /*
- * Copyright (C) 2013 Victor Nazarov <asviraspossible@gmail.com>
+ * Copyright (c) 2014, Victor Nazarov <asviraspossible@gmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Victor Nazarov nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.github.sviperll.repository;
 
-import com.github.sviperll.time.Times;
+import com.github.sviperll.IsomorphismDefinition;
+import com.github.sviperll.repository.ColumnStorableTypeBuilderDefinition.PreparedStatementParameterSetter;
+import com.github.sviperll.time.Time;
 import com.github.sviperll.time.UnixTime;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import com.github.sviperll.repository.TableColumn.PreparedStatementParameterSetter;
-import com.github.sviperll.Isomorphism;
 
-public class TableColumns {
-    public static <T> ConfigurableTableColumn<T> configure(TableColumn<T> column) {
-        if (column instanceof ConfigurableTableColumn)
-            return (ConfigurableTableColumn<T>)column;
+/**
+ *
+ * @author Victor Nazarov <asviraspossible@gmail.com>
+ */
+public class ColumnStorableTypeBuilder<T> implements ColumnStorableTypeBuilderDefinition<T> {
+    /**
+     * You should probably use {@link StorableType#forColumn}
+     *
+     * @see StorableType#forColumn
+     */
+    @Deprecated
+    public static ColumnStorableTypeBuilder<Integer> integer(String columnName) {
+        return integerColumnBuilder(columnName);
+    }
+
+    /**
+     * You should probably use {@link StorableType#forColumn}
+     *
+     * @see StorableType#forColumn
+     */
+    @Deprecated
+    public static ColumnStorableTypeBuilder<String> string(String columnName) {
+        return stringColumnBuilder(columnName);
+    }
+
+    /**
+     * You should probably use {@link StorableType#forColumn}
+     *
+     * @see StorableType#forColumn
+     */
+    @Deprecated
+    public static ColumnStorableTypeBuilder<UnixTime> unixTime(String columnName) {
+        return unixTimeColumnBuilder(columnName);
+    }
+
+    /**
+     * You should probably use {@link StorableType#forColumn}
+     *
+     * @see StorableType#forColumn
+     */
+    @Deprecated
+    public static ColumnStorableTypeBuilder<Boolean> booleanColumn(final String columnName) {
+        return booleanColumnBuilder(columnName);
+    }
+
+    static ColumnStorableTypeBuilder<Integer> integerColumnBuilder(String columnName) {
+        return new ColumnStorableTypeBuilder<Integer>(new IntegerColumn(columnName));
+    }
+
+    static ColumnStorableTypeBuilder<String> stringColumnBuilder(String columnName) {
+        return new ColumnStorableTypeBuilder<String>(new StringColumn(columnName));
+    }
+
+    static ColumnStorableTypeBuilder<UnixTime> unixTimeColumnBuilder(String columnName) {
+        return new ColumnStorableTypeBuilder<UnixTime>(new UnixTimeColumn(columnName));
+    }
+
+    static ColumnStorableTypeBuilder<Boolean> booleanColumnBuilder(final String columnName) {
+        return new ColumnStorableTypeBuilder<Boolean>(new BooleanColumn(columnName));
+    }
+
+    public static <T> ColumnStorableTypeBuilder<T> of(ColumnStorableTypeBuilderDefinition<T> column) {
+        if (column instanceof ColumnStorableTypeBuilder)
+            return (ColumnStorableTypeBuilder<T>)column;
         else
-            return new ConfigurableTableColumn<T>(column);
+            return new ColumnStorableTypeBuilder<T>(column);
     }
 
-    public static ConfigurableTableColumn<Integer> integer(String columnName) {
-        return new ConfigurableTableColumn<Integer>(new IntegerColumn(columnName));
+    private final ColumnStorableTypeBuilderDefinition<T> column;
+    private ColumnStorableTypeBuilder(ColumnStorableTypeBuilderDefinition<T> column) {
+        this.column = column;
     }
 
-    public static ConfigurableTableColumn<String> string(String columnName) {
-        return new ConfigurableTableColumn<String>(new StringColumn(columnName));
+    @Override
+    public String getColumnName() {
+        return column.getColumnName();
     }
 
-    public static ConfigurableTableColumn<UnixTime> unixTime(String columnName) {
-        return new ConfigurableTableColumn<UnixTime>(new UnixTimeColumn(columnName));
+    @Override
+    public PreparedStatementParameterSetter<T> createStatementSetter(PreparedStatement statement) {
+        return column.createStatementSetter(statement);
     }
 
-    public static <T, U> ConfigurableTableColumn<T> isomorphic(TableColumn<U> columnDefinition, Isomorphism<T, U> structure) {
-        return new ConfigurableTableColumn<T>(new IsomorphicColumn<T, U>(columnDefinition, structure));
+    @Override
+    public T retrieveValue(ResultSet resultSet) throws SQLException {
+        return column.retrieveValue(resultSet);
     }
 
-    public static <T> ConfigurableTableColumn<T> retrievedByIndex(TableColumn<T> columnDefinition, int index) {
-        return new ConfigurableTableColumn<T>(new RetrievedByIndexColumn<T>(columnDefinition, index));
+    @Override
+    public T retrieveValue(ResultSet resultSet, String label) throws SQLException {
+        return column.retrieveValue(resultSet, label);
     }
 
-    public static ConfigurableTableColumn<Boolean> booleanColumn(final String columnName) {
-        return new ConfigurableTableColumn<Boolean>(new BooleanColumn(columnName));
+    @Override
+    public T retrieveValue(ResultSet resultSet, int index) throws SQLException {
+        return column.retrieveValue(resultSet, index);
     }
 
-    private TableColumns() {
+    public <U> ColumnStorableTypeBuilder<U> isomorphic(IsomorphismDefinition<U, T> structure) {
+        return new ColumnStorableTypeBuilder<U>(new IsomorphicColumn<U, T>(column, structure));
     }
 
-    private static class IntegerColumn implements TableColumn<Integer> {
+    public ColumnStorableTypeBuilder<T> retrievedByIndex(int index) {
+        return new ColumnStorableTypeBuilder<T>(new RetrievedByIndexColumn<T>(column, index));
+    }
+
+    /**
+     * @return storable type for single column
+     */
+    public StorableType<T> build() {
+        return StorableType.of(column);
+    }
+
+    private static class IntegerColumn implements ColumnStorableTypeBuilderDefinition<Integer> {
         private final String name;
         public IntegerColumn(String name) {
             this.name = name;
@@ -104,7 +204,7 @@ public class TableColumns {
 
     }
 
-    private static class StringColumn implements TableColumn<String> {
+    private static class StringColumn implements ColumnStorableTypeBuilderDefinition<String> {
         private final String name;
         public StringColumn(String name) {
             this.name = name;
@@ -152,7 +252,7 @@ public class TableColumns {
         }
     }
 
-    private static class UnixTimeColumn implements TableColumn<UnixTime> {
+    private static class UnixTimeColumn implements ColumnStorableTypeBuilderDefinition<UnixTime> {
         private final String name;
         public UnixTimeColumn(String name) {
             this.name = name;
@@ -175,12 +275,12 @@ public class TableColumns {
 
         @Override
         public UnixTime retrieveValue(ResultSet resultSet, String label) throws SQLException {
-            return Times.resultSet(resultSet).getUnixTime(label, Times.GMT_OFFSET);
+            return Time.resultSet(resultSet).getUnixTime(label, Time.GMT_OFFSET);
         }
 
         @Override
         public UnixTime retrieveValue(ResultSet resultSet, int index) throws SQLException {
-            return Times.resultSet(resultSet).getUnixTime(index, Times.GMT_OFFSET);
+            return Time.resultSet(resultSet).getUnixTime(index, Time.GMT_OFFSET);
         }
 
         private static class UnixTimeColumnStatementSetter implements PreparedStatementParameterSetter<UnixTime> {
@@ -192,15 +292,15 @@ public class TableColumns {
 
             @Override
             public void setValue(int index, UnixTime value) throws SQLException {
-                Times.preparedStatement(statement).setUnixTime(index, value, Times.GMT_OFFSET);
+                Time.preparedStatement(statement).setUnixTime(index, value, Time.GMT_OFFSET);
             }
         }
     }
 
-    private static class IsomorphicColumn<T, U> implements TableColumn<T> {
-        private final TableColumn<U> columnDefinition;
-        private final Isomorphism<T, U> structure;
-        public IsomorphicColumn(TableColumn<U> columnDefinition, Isomorphism<T, U> structure) {
+    private static class IsomorphicColumn<T, U> implements ColumnStorableTypeBuilderDefinition<T> {
+        private final ColumnStorableTypeBuilderDefinition<U> columnDefinition;
+        private final IsomorphismDefinition<T, U> structure;
+        public IsomorphicColumn(ColumnStorableTypeBuilderDefinition<U> columnDefinition, IsomorphismDefinition<T, U> structure) {
             this.columnDefinition = columnDefinition;
             this.structure = structure;
         }
@@ -237,10 +337,10 @@ public class TableColumns {
         }
     }
 
-    private static class RetrievedByIndexColumn<T> implements TableColumn<T> {
-        private final TableColumn<T> columnDefinition;
+    private static class RetrievedByIndexColumn<T> implements ColumnStorableTypeBuilderDefinition<T> {
+        private final ColumnStorableTypeBuilderDefinition<T> columnDefinition;
         private final int index;
-        public RetrievedByIndexColumn(TableColumn<T> columnDefinition, int index) {
+        public RetrievedByIndexColumn(ColumnStorableTypeBuilderDefinition<T> columnDefinition, int index) {
             this.columnDefinition = columnDefinition;
             this.index = index;
         }
@@ -271,7 +371,7 @@ public class TableColumns {
         }
     }
 
-    private static class BooleanColumn implements TableColumn<Boolean> {
+    private static class BooleanColumn implements ColumnStorableTypeBuilderDefinition<Boolean> {
         private final String columnName;
 
         public BooleanColumn(String columnName) {
@@ -285,12 +385,7 @@ public class TableColumns {
 
         @Override
         public PreparedStatementParameterSetter<Boolean> createStatementSetter(final PreparedStatement statement) {
-            return new PreparedStatementParameterSetter<Boolean>() {
-                @Override
-                public void setValue(int index, Boolean value) throws SQLException {
-                    statement.setBoolean(index, value);
-                }
-            };
+            return new BooleanColumnPreparedStatementParameterSetter(statement);
         }
 
         @Override
@@ -306,6 +401,20 @@ public class TableColumns {
         @Override
         public Boolean retrieveValue(ResultSet resultSet, int index) throws SQLException {
             return resultSet.getBoolean(index);
+        }
+
+        private static class BooleanColumnPreparedStatementParameterSetter implements PreparedStatementParameterSetter<Boolean> {
+
+            private final PreparedStatement statement;
+
+            public BooleanColumnPreparedStatementParameterSetter(PreparedStatement statement) {
+                this.statement = statement;
+            }
+
+            @Override
+            public void setValue(int index, Boolean value) throws SQLException {
+                statement.setBoolean(index, value);
+            }
         }
     }
 }

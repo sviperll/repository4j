@@ -26,10 +26,12 @@
  */
 package com.github.sviperll.repository;
 
-/**
- *
- * @author vir
- */
-public interface ReadableRepositoryDirectoryConfiguration<K, V, O> extends ReadableRepositoryConfiguration<V, O>, RepositoryIndex<K> {
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
+public interface StorableTypeDefinition<T> {
+    List<? extends AtomicStorableComponent<T, ?>> getAtomicComponents();
+
+    T createInstance(ResultSet resultSet) throws SQLException;
 }

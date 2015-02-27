@@ -30,6 +30,23 @@ package com.github.sviperll.repository;
  *
  * @author vir
  */
-public interface ReadableRepositoryDirectoryConfiguration<K, V, O> extends ReadableRepositoryConfiguration<V, O>, RepositoryIndex<K> {
+public class Changes<T> {
+    public static <T> Changes<T> fromTo(T oldValue, T newValue) {
+        return new Changes<T>(oldValue, newValue);
+    }
 
+    private final T oldValue;
+    private final T newValue;
+    public Changes(T oldValue, T newValue) {
+        this.oldValue = oldValue;
+        this.newValue = newValue;
+    }
+
+    public T oldValue() {
+        return oldValue;
+    }
+
+    public T newValue() {
+        return newValue;
+    }
 }
