@@ -62,12 +62,12 @@
         <dependency>
             <groupId>com.github.sviperll</groupId>
             <artifactId>chicory-core</artifactId>
-            <version>0.17</version>
+            <version>0.18</version>
         </dependency>
         <dependency>
             <groupId>com.github.sviperll</groupId>
             <artifactId>chicory-time</artifactId>
-            <version>0.17</version>
+            <version>0.18</version>
         </dependency>
     </dependencies>
 </project>
