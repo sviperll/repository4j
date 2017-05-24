@@ -1,5 +1,14 @@
 /build
 /dist
 /target
+/*.iml
+/repository4j/build
+/repository4j/dist
+/repository4j/target
+/repository4j/*.iml
+/repository4j-examples/build
+/repository4j-examples/dist
+/repository4j-examples/target
+/repository4j-examples/*.iml
 *~
 
