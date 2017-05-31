@@ -1,8 +1,8 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
-import com.github.sviperll.repository4j.SQLSupplier;
 import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.RowLayout;
-import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.ReadableRow;
+import com.github.sviperll.repository4j.sql.ReadableRow;
+import com.github.sviperll.repository4j.sql.SQLSupplier;
 
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
@@ -26,16 +26,28 @@ public class QueryResult<T> implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
-        readableResult.close();
+        try {
+            readableResult.close();
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
     public boolean next() throws SQLException {
-        return readableResult.next();
+        try {
+            return readableResult.next();
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
     public T get() throws SQLException {
         SQLSupplier<T> instanceLoader = rowLayout.createRawReader(readableResult);
-        return instanceLoader.get();
+        try {
+            return instanceLoader.get();
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
     private static class ReadableResult implements ReadableRow, AutoCloseable {

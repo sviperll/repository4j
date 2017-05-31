@@ -1,11 +1,15 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
-import com.github.sviperll.repository4j.SQLRunnable;
+import com.github.sviperll.repository4j.sql.SQLRunnable;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public class Transaction implements AutoCloseable {
+    public static Transaction getCurrent(Connection connection) {
+        return new Transaction(connection);
+    }
+
     private final Connection connection;
     private boolean isCommited = false;
 
@@ -14,19 +18,34 @@ public class Transaction implements AutoCloseable {
     }
 
     public PreparedQuery prepareQuery(Query query) throws SQLException {
-        isCommited = false;
-        return PreparedQuery.createInstance(query.placeholders(), connection.prepareStatement(query.toString()));
+        if (isCommited)
+            throw new IllegalStateException("Transaction is already commited");
+        try {
+            return PreparedQuery.createInstance(query.placeholders(), connection.prepareStatement(query.toString()));
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
     public void commit() throws SQLException {
-        connection.commit();
+        try {
+            connection.commit();
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
         isCommited = true;
     }
 
     @Override
     public void close() throws SQLException {
-        if (!isCommited)
-            connection.rollback();
+        if (!isCommited) {
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                throw SQLExceptions.precise(e);
+            }
+            isCommited = true;
+        }
     }
 
     public enum Isolation {

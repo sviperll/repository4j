@@ -1,11 +1,11 @@
-package com.github.sviperll.repository4j.provider;
+package com.github.sviperll.repository4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SQLHelper {
-    public static final String LIMIT_COLUMN_NAME = "$$limit";
+class SQLHelper {
+    static final String LIMIT_COLUMN_NAME = "$$limit";
 
     static String lexComparison(List<String> orderColumns, String operator) {
         return IntStream.range(0, orderColumns.size())

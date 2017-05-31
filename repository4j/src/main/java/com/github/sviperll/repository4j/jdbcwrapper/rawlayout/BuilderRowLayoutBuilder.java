@@ -1,8 +1,10 @@
 package com.github.sviperll.repository4j.jdbcwrapper.rawlayout;
 
-import com.github.sviperll.repository4j.SQLConsumer;
-import com.github.sviperll.repository4j.SQLRunnable;
-import com.github.sviperll.repository4j.SQLSupplier;
+import com.github.sviperll.repository4j.sql.ReadableRow;
+import com.github.sviperll.repository4j.sql.SQLConsumer;
+import com.github.sviperll.repository4j.sql.SQLRunnable;
+import com.github.sviperll.repository4j.sql.SQLSupplier;
+import com.github.sviperll.repository4j.sql.WritableRaw;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

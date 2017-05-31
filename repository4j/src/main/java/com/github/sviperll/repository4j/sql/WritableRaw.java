@@ -1,4 +1,4 @@
-package com.github.sviperll.repository4j.jdbcwrapper.rawlayout;
+package com.github.sviperll.repository4j.sql;
 
 import java.sql.SQLException;
 

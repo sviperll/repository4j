@@ -1,7 +1,7 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
-import com.github.sviperll.repository4j.SQLRunnable;
-import com.github.sviperll.repository4j.SQLSupplier;
+import com.github.sviperll.repository4j.sql.SQLRunnable;
+import com.github.sviperll.repository4j.sql.SQLSupplier;
 
 import java.sql.Connection;
 import java.sql.SQLException;

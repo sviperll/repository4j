@@ -1,8 +1,8 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
-import com.github.sviperll.repository4j.SQLConsumer;
 import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.RowLayout;
-import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.WritableRaw;
+import com.github.sviperll.repository4j.sql.SQLConsumer;
+import com.github.sviperll.repository4j.sql.WritableRaw;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -120,13 +120,24 @@ public class Query {
         }
 
         public QueryResult<T> execute() throws SQLException {
-            ResultSet resultSet = preparedStatement.executeQuery();
+            ResultSet resultSet;
+            try {
+                resultSet = preparedStatement.executeQuery();
+            } catch (SQLException e) {
+                throw SQLExceptions.precise(e);
+            }
             return knownValues.createQueryResult(resultRowLayout, resultSet);
         }
 
-        public <K> void setConstantColumns(RowLayout<K> rowLayout, K value) throws SQLException {
+        public <K> void setConstantColumns(RowLayout<K> rowLayout, K value)
+                throws SQLException {
+
             SQLConsumer<K> setter = rowLayout.createRawWriter(knownValues);
-            setter.accept(value);
+            try {
+                setter.accept(value);
+            } catch (SQLException e) {
+                throw SQLExceptions.precise(e);
+            }
         }
 
         private static class KnownValues implements WritableRaw {

@@ -1,8 +1,8 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
-import com.github.sviperll.repository4j.SQLConsumer;
 import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.RowLayout;
-import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.WritableRaw;
+import com.github.sviperll.repository4j.sql.SQLConsumer;
+import com.github.sviperll.repository4j.sql.WritableRaw;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -22,20 +22,34 @@ public class PreparedQuery implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
-        preparedStatement.close();
+        try {
+            preparedStatement.close();
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
     public int executeUpdate() throws SQLException {
-        return preparedStatement.executeUpdate();
+        try {
+            return preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
-    public <T> Query.Executor<T> createQueryExecutor(RowLayout<T> rowLayout) throws SQLException {
+    public <T> Query.Executor<T> createQueryExecutor(RowLayout<T> rowLayout) {
         return preparedStatement.createQueryExecutor(rowLayout);
     }
 
-    public <T> void fillIn(RowLayout<T> rowLayout, T value) throws SQLException {
+    public <T> void fillIn(RowLayout<T> rowLayout, T value)
+            throws SQLException {
+
         SQLConsumer<T> setter = rowLayout.createRawWriter(preparedStatement);
-        setter.accept(value);
+        try {
+            setter.accept(value);
+        } catch (SQLException e) {
+            throw SQLExceptions.precise(e);
+        }
     }
 
     private static class WritablePreparedStatement implements WritableRaw, AutoCloseable {

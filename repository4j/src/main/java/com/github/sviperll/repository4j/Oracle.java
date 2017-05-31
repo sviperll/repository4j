@@ -1,7 +1,6 @@
-package com.github.sviperll.repository4j.provider;
+package com.github.sviperll.repository4j;
 
 import com.github.sviperll.repository4j.jdbcwrapper.Query;
-import com.github.sviperll.repository4j.QuerySlicing;
 
 import java.util.List;
 import java.util.stream.Collectors;
