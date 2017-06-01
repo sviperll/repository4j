@@ -5,14 +5,17 @@ import com.github.sviperll.repository4j.sql.SQLConsumer;
 import com.github.sviperll.repository4j.sql.WritableRaw;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 public class PreparedQuery implements AutoCloseable {
-    static PreparedQuery createInstance(Map<String, List<Integer>> indecies, PreparedStatement preparedStatement) {
-        return new PreparedQuery(new WritablePreparedStatement(indecies, preparedStatement));
+    static PreparedQuery createInstance(Map<String, List<Integer>> indecies,
+                                        PreparedStatement preparedStatement,
+                                        boolean hasGeneratedColumns) {
+        return new PreparedQuery(new WritablePreparedStatement(indecies, preparedStatement, hasGeneratedColumns));
     }
     private final WritablePreparedStatement preparedStatement;
 
@@ -29,7 +32,7 @@ public class PreparedQuery implements AutoCloseable {
         }
     }
 
-    public int executeUpdate() throws SQLException {
+    public UpdateResult executeUpdate() throws SQLException {
         try {
             return preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -37,8 +40,8 @@ public class PreparedQuery implements AutoCloseable {
         }
     }
 
-    public <T> Query.Executor<T> createQueryExecutor(RowLayout<T> rowLayout) {
-        return preparedStatement.createQueryExecutor(rowLayout);
+    public <T> QueryResult.Extractor<T> createQueryResultExtractor(RowLayout<T> rowLayout) {
+        return preparedStatement.createQueryResultExtractor(rowLayout);
     }
 
     public <T> void fillIn(RowLayout<T> rowLayout, T value)
@@ -55,10 +58,14 @@ public class PreparedQuery implements AutoCloseable {
     private static class WritablePreparedStatement implements WritableRaw, AutoCloseable {
         private final Map<String, List<Integer>> indecies;
         private final PreparedStatement preparedStatement;
+        private final boolean hasGeneratedColumns;
 
-        WritablePreparedStatement(Map<String, List<Integer>> indecies, PreparedStatement statement) {
+        WritablePreparedStatement(Map<String, List<Integer>> indecies,
+                                  PreparedStatement statement,
+                                  boolean hasGeneratedColumns) {
             this.indecies = indecies;
             this.preparedStatement = statement;
+            this.hasGeneratedColumns = hasGeneratedColumns;
         }
 
         @Override
@@ -94,12 +101,28 @@ public class PreparedQuery implements AutoCloseable {
             preparedStatement.close();
         }
 
-        <T> Query.Executor<T> createQueryExecutor(RowLayout<T> rowLayout) {
-            return new Query.Executor<T>(rowLayout, preparedStatement);
+        <T> QueryResult.Extractor<T> createQueryResultExtractor(RowLayout<T> rowLayout) {
+            return new QueryResult.Extractor<>(rowLayout, this::executeQuery);
         }
 
-        int executeUpdate() throws SQLException {
-            return preparedStatement.executeUpdate();
+        private ReadableResult executeQuery() throws SQLException {
+            return new ReadableResult.OfResultSet(preparedStatement.executeQuery());
+        }
+
+        UpdateResult executeUpdate() throws SQLException {
+            int count = preparedStatement.executeUpdate();
+            if (hasGeneratedColumns) {
+                return new UpdateResult(count, () -> getGeneratedKeys(count));
+            } else {
+                return new UpdateResult(count, () -> new ReadableResult.EmptyRows(count));
+            }
+        }
+
+        private ReadableResult getGeneratedKeys(int count) throws SQLException {
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            return generatedKeys == null
+                    ? new ReadableResult.EmptyRows(count)
+                    : new ReadableResult.OfResultSet(generatedKeys);
         }
     }
 }

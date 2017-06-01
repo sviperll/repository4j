@@ -1,12 +1,5 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
-import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.RowLayout;
-import com.github.sviperll.repository4j.sql.SQLConsumer;
-import com.github.sviperll.repository4j.sql.WritableRaw;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -106,67 +99,7 @@ public class Query {
     }
 
     private enum CompileState {
-        IN_TEXT, IN_PLACEHOLDER, FOUND_COLON;
-    }
-
-    public static class Executor<T> {
-        private final RowLayout<T> resultRowLayout;
-        private final PreparedStatement preparedStatement;
-        private final KnownValues knownValues = new KnownValues();
-
-        Executor(RowLayout<T> resultRowLayout, PreparedStatement preparedStatement) {
-            this.resultRowLayout = resultRowLayout;
-            this.preparedStatement = preparedStatement;
-        }
-
-        public QueryResult<T> execute() throws SQLException {
-            ResultSet resultSet;
-            try {
-                resultSet = preparedStatement.executeQuery();
-            } catch (SQLException e) {
-                throw SQLExceptions.precise(e);
-            }
-            return knownValues.createQueryResult(resultRowLayout, resultSet);
-        }
-
-        public <K> void setConstantColumns(RowLayout<K> rowLayout, K value)
-                throws SQLException {
-
-            SQLConsumer<K> setter = rowLayout.createRawWriter(knownValues);
-            try {
-                setter.accept(value);
-            } catch (SQLException e) {
-                throw SQLExceptions.precise(e);
-            }
-        }
-
-        private static class KnownValues implements WritableRaw {
-            private final Map<String, Object> values = new TreeMap<>();
-            @Override
-            public void setNull(String columnName, int sqlType) throws SQLException {
-                values.put(columnName, null);
-            }
-
-            @Override
-            public void setInt(String columnName, int value) throws SQLException {
-                values.put(columnName, value);
-            }
-
-            @Override
-            public void setLong(String columnName, long value) throws SQLException {
-                values.put(columnName, value);
-            }
-
-            @Override
-            public void setString(String columnName, String value) throws SQLException {
-                values.put(columnName, value);
-            }
-
-            <T> QueryResult<T> createQueryResult(RowLayout<T> resultRowLayout, ResultSet resultSet) {
-                return QueryResult.createInstance(resultRowLayout, values, resultSet);
-            }
-        }
-
+        IN_TEXT, IN_PLACEHOLDER, FOUND_COLON
     }
 
 }

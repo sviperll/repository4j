@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-class SQLHelper {
+class QueryFactories {
     static final String LIMIT_COLUMN_NAME = "$$limit";
 
     static String lexComparison(List<String> orderColumns, String operator) {
@@ -29,7 +29,7 @@ class SQLHelper {
         return columnNames.stream().map(name -> applyOperator(name, operator)).collect(Collectors.joining(delimiter));
     }
 
-    private SQLHelper() {
+    private QueryFactories() {
         throw new UnsupportedOperationException("Shouldn't be called");
     }
 }

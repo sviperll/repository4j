@@ -1,21 +1,15 @@
 package com.github.sviperll.repository4j.jdbcwrapper;
 
 import com.github.sviperll.repository4j.jdbcwrapper.rawlayout.RowLayout;
-import com.github.sviperll.repository4j.sql.ReadableRow;
+import com.github.sviperll.repository4j.sql.SQLConsumer;
 import com.github.sviperll.repository4j.sql.SQLSupplier;
+import com.github.sviperll.repository4j.sql.WritableRaw;
 
-import javax.annotation.Nullable;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class QueryResult<T> implements AutoCloseable {
-    static <T> QueryResult<T> createInstance(RowLayout<T> rowLayout,
-                                             Map<String, Object> constantColumns,
-                                             ResultSet resultSet) {
-        return new QueryResult<>(rowLayout, new ReadableResult(constantColumns, resultSet));
-    }
-
     private final RowLayout<T> rowLayout;
     private final ReadableResult readableResult;
 
@@ -50,54 +44,66 @@ public class QueryResult<T> implements AutoCloseable {
         }
     }
 
-    private static class ReadableResult implements ReadableRow, AutoCloseable {
-        private final Map<String, Object> values;
-        private final ResultSet resultSet;
+    public static class Extractor<T> {
+        private final RowLayout<T> resultRowLayout;
+        private final SQLSupplier<ReadableResult> resultSetFactory;
+        private final KnownValues knownValues = new KnownValues();
 
-        ReadableResult(Map<String, Object> values, ResultSet resultSet) {
-            this.values = values;
-            this.resultSet = resultSet;
+        Extractor(RowLayout<T> resultRowLayout, SQLSupplier<ReadableResult> resultSetFactory) {
+            this.resultRowLayout = resultRowLayout;
+            this.resultSetFactory = resultSetFactory;
         }
 
-        public boolean next() throws SQLException {
-            return resultSet.next();
-        }
-
-        @Nullable
-        @Override
-        public Integer getInteger(String columnName) throws SQLException {
-            if (values.containsKey(columnName)) {
-                return (Integer)values.get(columnName);
-            } else {
-                int value = resultSet.getInt(columnName);
-                return resultSet.wasNull() ? null : value;
+        public QueryResult<T> extractQueryResult() throws SQLException {
+            try {
+                return knownValues.createQueryResult(resultRowLayout, resultSetFactory);
+            } catch (SQLException e) {
+                throw SQLExceptions.precise(e);
             }
         }
 
-        @Nullable
-        @Override
-        public Long getLong(String columnName) throws SQLException {
-            if (values.containsKey(columnName)) {
-                return (Long)values.get(columnName);
-            } else {
-                long value = resultSet.getLong(columnName);
-                return resultSet.wasNull() ? null : value;
+        public <K> void setConstantColumns(RowLayout<K> rowLayout, K value)
+                throws SQLException {
+
+            SQLConsumer<K> setter = rowLayout.createRawWriter(knownValues);
+            try {
+                setter.accept(value);
+            } catch (SQLException e) {
+                throw SQLExceptions.precise(e);
             }
         }
 
-        @Nullable
-        @Override
-        public String getString(String columnName) throws SQLException {
-            if (values.containsKey(columnName)) {
-                return (String)values.get(columnName);
-            } else {
-                return resultSet.getString(columnName);
+        private static class KnownValues implements WritableRaw {
+            private final Map<String, Object> values = new TreeMap<>();
+            @Override
+            public void setNull(String columnName, int sqlType) throws SQLException {
+                values.put(columnName, null);
+            }
+
+            @Override
+            public void setInt(String columnName, int value) throws SQLException {
+                values.put(columnName, value);
+            }
+
+            @Override
+            public void setLong(String columnName, long value) throws SQLException {
+                values.put(columnName, value);
+            }
+
+            @Override
+            public void setString(String columnName, String value) throws SQLException {
+                values.put(columnName, value);
+            }
+
+            <T> QueryResult<T> createQueryResult(RowLayout<T> resultRowLayout,
+                                                 SQLSupplier<ReadableResult> resultSetFactory) throws SQLException {
+                ReadableResult readableResult = resultSetFactory.get();
+                readableResult = values.isEmpty()
+                        ? readableResult
+                        : new ReadableResult.WithConstantColumns(values, readableResult);
+                return new QueryResult<>(resultRowLayout, readableResult);
             }
         }
 
-        @Override
-        public void close() throws SQLException {
-            resultSet.close();
-        }
     }
 }

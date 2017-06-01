@@ -27,4 +27,9 @@ abstract class AbstractUserRepository extends UserMapping implements UserReposit
     public List<User> entryList(QuerySlicing<User> slicing) throws TransientTransactionException, RepositoryException {
         return getRepositoryFunction(ENTRY_LIST).apply(slicing.map(User::login));
     }
+
+    @Override
+    public User put(Credentials credentials) throws TransientTransactionException, RepositoryException {
+        return getRepositoryFunction(PUT).apply(credentials);
+    }
 }
